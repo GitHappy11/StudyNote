@@ -72,3 +72,27 @@ ip add 192.168.2.254 255.255.255.0 //进入端口VLAN 设置允许通过该端�
 ```
 
 一个严重失误记录：把三层交换机的那台PC的ip设置成了192.168.1.2  而设置能进入VLAN200的网关是2.254所以导致无法该PC无法回信所有ping它的pc。
+
+
+
+##### 5.交换机端口聚合
+
+```c
+Switch(config)#int range f0/1-2 //进入f0/1和f0/2端口
+Switch(config-if-range)#sw mode trunk  //设置端口（两个）为trunk端口
+Switch(config-if-range)#channel-group 1 mode  on  //设置端口聚合协议                         Switch(config)#port-channel load-balance dst-ip  //配置以太通道的负载平衡方式                 Switch#show etherchannel  summary //查看通道接口状况                                         //设置完毕后就可以相互ping了                                              
+```
+
+
+
+##### 6.综合路由
+
+```c
+Switch(config)#ip route 0.0.0.0  0.0.0.0 192.168.3.1 //ip route 目标ip 掩码 跃点ip
+Switch(config)#router rip //设置rip协议
+Switch(config-router)#network 192.168.1.0
+Switch(config-router)#network 192.168.3.0 //声明本设备的直连网段
+Switch(config-router)#version 2 //设置版本号
+```
+
+端口要启用才能通讯，分端口的话要打开总端口，分端口就都会打开
