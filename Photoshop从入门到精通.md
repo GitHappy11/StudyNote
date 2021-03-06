@@ -12,11 +12,11 @@
 
 #### 选择类工具区别（W）
 
-1.**魔棒![](D:\Work\StudyNote\image\ps4.png)**：可以快速自动的选择一块和其他颜色区别比较大的一个区块，但是只能选中单个区域。
+1.**魔棒![](D:\WorkData\StudyNote\image\ps4.png)**：可以快速自动的选择一块和其他颜色区别比较大的一个区块，但是只能选中单个区域。
 
-2.**快速选择**![](D:\Work\StudyNote\image\psks.png)：会在点击的附近寻找，而且可以选中多个区域。
+2.**快速选择**![](D:\WorkData\StudyNote\image\psks.png)：会在点击的附近寻找，而且可以选中多个区域。
 
-3.**角色选择![](D:\Work\StudyNote\image\psdx.png)**：可以框选某个区域，自动寻找一块区域套索，也只能选中单个区域。
+3.**角色选择![](D:\WorkData\StudyNote\image\psdx.png)**：可以框选某个区域，自动寻找一块区域套索，也只能选中单个区域。
 
 如果不好选中想要的区块的话，那就放大图像，调整工具大小，慢慢勾勒边缘（工具边缘就是圆圈）
 
@@ -24,31 +24,31 @@
 
 
 
-#### 裁剪工具（C）![](D:\Work\StudyNote\image\ps3.png)
+#### 裁剪工具（C）![](D:\WorkData\StudyNote\image\ps3.png)
 
 裁剪和拉直可以创建一个清晰的目标点，使图像布局变的更加均衡，变的更有重点。
 
 
 
-#### 污点修复工具（J）![](D:\Work\StudyNote\image\ps2.png)
+#### 污点修复工具（J）![](D:\WorkData\StudyNote\image\ps2.png)
 
 简单，又好用的一个自动工具，自动去除周围颜色不协调的痕迹（去水印）
 
 
 
-#### 仿制图章工具（S）![](D:\Work\StudyNote\image\ps.png)
+#### 仿制图章工具（S）![](D:\WorkData\StudyNote\image\ps.png)
 
 可以复制范围内的图像，然后按住Alt点击可以在周围自动优化形成多个相同的图像。
 
 
 
-#### 抓手工具（H）![](D:\Work\StudyNote\image\pszs.png)
+#### 抓手工具（H）![](D:\WorkData\StudyNote\image\pszs.png)
 
 可以自由拖动图片
 
 
 
-#### 吸管工具（I）![](D:\Work\StudyNote\image\psxg.png)
+#### 吸管工具（I）![](D:\WorkData\StudyNote\image\psxg.png)
 
 也就是取色工具
 
@@ -80,7 +80,7 @@
 
 使用图层设置调整透明度。滤镜可以让图层变成背景
 
-![](D:\Work\StudyNote\image\pstc.png)
+![](D:\WorkData\StudyNote\image\pstc.png)
 
 #### 滤镜
 

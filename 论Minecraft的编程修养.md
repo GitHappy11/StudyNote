@@ -8,7 +8,7 @@
 
 基本逻辑目录
 
-![image-20210118211856387](D:\Work\StudyNote\image\image-20210118211856387.png)
+![image-20210118211856387](D:\WorkData\StudyNote\image\image-20210118211856387.png)
 
 #### Pack.mcmeta
 
@@ -222,7 +222,7 @@ time set day
 }
 ```
 
-
+f
 
 #### 常用命令
 
@@ -237,5 +237,5 @@ time set day
 
 #### 版本编号
 
-![image-20210117141108145](D:\Work\StudyNote\image\image-20210117141108145.png)
+![image-20210117141108145](D:\WorkData\StudyNote\image\image-20210117141108145.png)
 

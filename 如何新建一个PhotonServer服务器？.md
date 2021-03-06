@@ -609,7 +609,8 @@ public class NetSvc : SystemRoot,IPhotonPeerListener
         }
         else
         {
-            OARoot.Instance.AddDynTips("出现网络操作错误！错误操作代码:" + eventData.Code + "此错误并不致命，但建议您重启程序并报告！记下您的操作过程以便复现！", "网络错误！");
+           
+
         }
     }
     public void OnOperationResponse(OperationResponse operationResponse)
@@ -623,7 +624,7 @@ public class NetSvc : SystemRoot,IPhotonPeerListener
         }
         else
         {
-            OARoot.Instance.AddDynTips("出现网络操作错误！错误操作代码:" + operationResponse.OperationCode + "此错误并不致命，但建议您重启程序并报告！记下您的操作过程以便复现！","网络错误！");
+              //这是网络消息回复的时候，没有客户端没有找到相应的处理方法，因为客户端每次只能生成一个处理方法，多个同样的网络消息涌进，就会导致找不到处理方法，一般要等到网络消息过来处理完毕后，客户端再发送一个网络消息给服务端。解决方式：来一个缓冲条，等待网络消息接收完毕后才能发送下一个网络消息。所谓的网络慢转圈圈就是这种情况了。
         }
 
     }
