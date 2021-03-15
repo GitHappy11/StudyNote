@@ -206,3 +206,6 @@ if (File.Exists(savePathByXML)//检查文件是否存在
             LocalData.shootNum = save.shootNum;
 ```
 
+### 5.ScriptableObject
+
+​	ScriptableObject里的信息不会随着游戏的关闭而消失。
