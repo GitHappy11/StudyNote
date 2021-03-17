@@ -2,6 +2,21 @@
 
 ## 			实例项目：HalloweenShooting
 
+```c#
+//没有游戏存档路径的话，就创建一个存档路径
+if (!Directory.Exists(savePath))
+{
+   Directory.CreateDirectory(savePath);
+}
+```
+
+```c#
+//DefaultCompany 就是生成项目的默认公司名，后面的就是你的项目名
+Application.persistentDataPath=C:/Users/Eleven/AppData/LocalLow/DefaultCompany/InventroyTutorial
+//这个路径就是Assets的根目录
+Application.dataPath
+```
+
 ### 	1.PlayerPrefs
 
 ​	这是一个本地持久化保存与读取的类
@@ -28,6 +43,8 @@ Save() //保存数据 一般情况无需保存
 
 **存储：**
 
+（1）直接存储
+
 ```c#
 	    //获得一个需要保存数据的类 我这里就把LocalData类里的数据保存下来
         //注意：这个类是要标记可序列化的[Serializable],获得这个SaveData类的方式最好是用一个方法初始化一下【其他保存方式也类似】
@@ -47,7 +64,24 @@ Save() //保存数据 一般情况无需保存
         if (File.Exists(savePathByBin))
 ```
 
+（2）JsonUnility
+
+```c#
+	    //二进制转换
+        BinaryFormatter binaryFormatter = new BinaryFormatter();
+        //创建存档文件【后缀随意，本质是txt】
+        FileStream file = File.Create(savePath+"/Save.save");
+        //将需要保存的类数据保存为json文件
+        var json = JsonUtility.ToJson(bagData);
+        //转化为二进制格式,写入文件夹中
+        binaryFormatter.Serialize(file, json);
+        //可以使用Using简化
+        file.Close();
+```
+
 **读取：**
+
+(1)直接存储
 
 ```c#
 	    //反序列化过程
@@ -68,13 +102,28 @@ Save() //保存数据 一般情况无需保存
         }	
 ```
 
-### 3.Json方式
+(2)JsonUnility
+
+```c#
+		   //二进制转换
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            //打开文件
+            FileStream file = File.Open(savePath + "/Save.save", FileMode.Open);
+            //使用存档文件重写序列化的ObjectScript类
+            JsonUtility.FromJsonOverwrite((string)binaryFormatter.Deserialize(file), bagData);
+            //可以使用Using简化
+            file.Close();
+```
+
+3.Json方式
 
 ​	优点：存档文件有可读性较好，较为简单
 
-​	缺点：需要一个依赖库【LitJson.dll】
+​	缺点：需要一个依赖库【LitJson.dll】，可以使用Unity自带的【JsonUnility.ToJson(要保存的类)】
 
 **存储：**
+
+（1）LitJson.dll
 
 ```c#
 	    //获得一个需要保存数据的类 我这里就把LocalData类里的数据保存下来
@@ -93,7 +142,9 @@ Save() //保存数据 一般情况无需保存
         if (File.Exists(savePathByJson))
 ```
 
-**读取：**
+
+
+*读取：**
 
 ```c#
         //先看文件是否存在
@@ -208,4 +259,12 @@ if (File.Exists(savePathByXML)//检查文件是否存在
 
 ### 5.ScriptableObject
 
-​	ScriptableObject里的信息不会随着游戏的关闭而消失。
+​	ScriptableObject里的信息不会随着游戏的关闭而消失，仅限项目未生成状态，生成项目后，就不会保存了。
+
+就需要上面的方法保存.
+
+​	Scriptable object在游戏打包发布后不可在游戏进行中修改，可以被json覆盖，但是存取的方法不会像Unity Editor里那么简单直接。它的用处可以看这篇博客https://blog.csdn.net/candycat1992/article/details/52181814
+以下是官方文档里的话
+In a deployed build, however, you can’t use ScriptableObjects to save data, but you can use the saved data from the ScriptableObject Assets that you set up during development.
+
+笔者的理解是：ScriptableObjects这个类型并不推荐在正式的(交付后)运行中保存实时数据，我们可以更多地用它在开发过程中实时地保存调试数据。
