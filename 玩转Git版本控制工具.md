@@ -42,7 +42,7 @@ git init
 
 最终：使用 git commit 命令提交  ------本地库
 
-```c
+```c#
 git add demo.txt //将文件提交至暂存区 似乎只要提交文件一次到暂存区，以后就不用再提交了，移除后要再次add
 git commit -m "我就是想上传这个文件" demo.txt   //将文件上传至本地库
 git status //查看仓库文件状态（看看有谁没被管理）
