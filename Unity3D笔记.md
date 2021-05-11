@@ -38,6 +38,8 @@
 
 ​	AssetDatabase.LoadAssetAtPath读取只能从项目路径开始读取，不能使用Application.dataPath从盘符开始读取
 
+​	关于图层问题，如果人物和地图处于相同图层，动画可能出现闪烁。是因为最上层图层不确定，在随机显示地图和人物。
+
 ​	
 
 ## 	UnityAPi
@@ -133,5 +135,24 @@ public List<int> IDLst;
 [HideInInspector]public bool isAttacked;//可以在可视化界面中隐藏Public变量
 
 
+```
+
+## Unity编辑器内的弹窗提示
+
+```c#
+ //创建提示窗口 “确定”就是返回true
+if (EditorUtility.DisplayDialog("打包信息", msg, "确定", "取消"))
+{
+//检测路径是否存在，如果不不存在则创建
+if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+//打包进度条
+EditorUtility.DisplayProgressBar("信息", "正在打包资源包", 0f);
+//开始打包
+BuildPipeline.BuildAssetBundles(path, options, platform);
+ //刷新编辑器资源
+AssetDatabase.Refresh();
+//tip弹窗提示
+EditorUtility.DisplayDialog("提示", "打包AssetBundle完毕", "确定");
+}
 ```
 

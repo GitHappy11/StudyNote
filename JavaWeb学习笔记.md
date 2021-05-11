@@ -28,7 +28,7 @@ XML文件开头必须是XML声明
 
 实际项目在暗黑战神项目中有应用到。
 
-#### 2.在Jsp文件中写Java代码
+#### 在Jsp文件中写Java代码
 
 ```Java
 //引入包的形式
@@ -66,13 +66,21 @@ out.println(request.getParameter("password"));
  <!--上面传输过来的参数。都会保存在Request里，随时在任何文件内调用--> 
 ```
 
-#### Request
+#### Request【单个网页】
 
 每个分支网页都会有一个，在网页之间相互传递信息和存储信息
 
 **生命周期：**一个请求生成和下一个请求生成
 
-#### 3.Session
+####page【this】
+
+得到页面内的数据，无法进行传递。
+
+#### PageContext【this】
+
+可以获取到其他的内置对象，也可以获得页面内的数据，然后放置到其他的内置对象中。
+
+#### Session【单个客户端】
 
 在用户的访问及服务器的回应（可能不止一次）就是会话，直到用户关闭网页。每一个客户端对应着一个Session。这个就类似于一个全局的Request，不需要再对象里传来传去。直接可以调用。
 
@@ -83,7 +91,7 @@ session.setAttribute("user",user);
 
 **生命周期：**打开一个会话的时候和关闭会话。
 
-#### 4.Application
+#### Application【全局】
 
 本质上是一个ServetContext 类 可以new。
 
@@ -107,7 +115,7 @@ session.setAttribute("user",user);
 
 和上面一样，接收消息处理消息。
 
-#### 6.Web.xml
+#### Web.xml
 
 配置书写规则以及一些文件（Servlet）的访问路径
 
@@ -115,7 +123,16 @@ session.setAttribute("user",user);
 
 D:\Work\JavaWebData\Tomcat\apache-tomcat-9.0.41\webapps\examples\WEB-INF
 
-#### 7.请求转发和重定向
+```xml
+<display-name>Second</display-name> //项目名
+<welcome-file-list>  //默认的欢迎页面，可有多个，优先级从上到下，需要在web目录下
+       <welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+```
+
+
+
+#### 请求转发和重定向
 
 ```java
 //（请求转发）跳转至登录界面，然后把两个消息包发送给它，让它去处理 这里不会重新创建。它已经是一个在使用中的对象了
@@ -126,6 +143,84 @@ response.sendRedirect("Login.jsp");
 
 什么时候使用重定向？没有消息包需要传输和需要更新Request的时候使用。应用场景：用户直接转向其他场景，不需要以前遗留的Request包。
 
+#### 引用页面
+
+经典例子：网页头部和尾部， 如果不使用引用的方式，当你维护头部部分时，每个页面都需要修改，类似于要做成一个预制体。
+
+```jsp
+<jsp:include page="head.jsp"></jsp:include>
+//这里有一些中间内容。。。
+<jsp:include page="footer.jsp"></jsp:include>
+```
+
+#### 相对路径和绝对路径
+
+绝对路径就不说了，如果转到其他环境则就会变化【根目录为项目文件夹，服务端可用】，而相对路径在跳转的时候【跳转到其他文件夹的文件】，这样那个文件的相对路径可能就会混乱，导致跳转失败，最好的方法就是使用路径变量来保证绝对/相对路径的正常跳转。
+
+```html
+href="<%request.getContextPath()%>/css/style.css" //客户端路径就用这种方式 需要浏览器去解析 
+```
+
+#### 关于EL表达式
+
+```html
+ request.getAttribute("msg");
+<%--这里使用的是EL表达式，可以直接获得--%>
+----${msg}---
+<%--可以使用方法，获得字符串--%>
+----${msg.getUsername}--
+<%--也可以使用变量
+----${msg.username}---
+<%--还可以从Map中获得值【需要.键】--%>
+----${map.name}---
+<%--也能从List中获取相应的对象--%>
+----${List[2].name}---
+<%--也可以判断某一个对象是否为空--%>
+----${empty user123}---
+```
+
+如果其他域里有相同的变量参数：将会以以下的顺序来优先读出内容：page，request，session，application，
+
+#### JSTL
+
+用标签语言来代替信息传递语言，可以更方便的传递信息,类似于将Set，Get 方法封装了起来，更好的调用，再配合EL表达式，进行取出。
+
+需要引入Jar包，更多相关请看文档。
+
+```jsp
+--使用标签需要引用核心标签库以及标签变量
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
+<%--下面的这句话就等于 <%request.setAttribute("username","JSTLtest");%>--%>
+<c:set var="username" value="JSTLtest"  scope="request"></c:set>
+<%--以下两种方式都可以取出,一般情况都使用EL表达式--%>
+<c:out value="${username}"></c:out>
+${username}
+
+<%--也可以使用判断语句--%>
+<c:set var="salary" scope="session" value="${0000*2}"/>
+<c:if test="${salary > 2000}">
+<%--如果不符合条件下面这条就不会显示--%>
+<p>我的工资为: <c:out value="${salary}"/><p>
+</c:if>
+
+<%--<c:choose>标签与Java switch语句的功能一样，用于在众多选项中做出选择。--%>
+<%--switch语句中有case，而<c:choose>标签中对应有<c:when>，switch语句中有default，而<c:choose>标签中有<c:otherwise>。--%>
+<c:choose>
+    <c:when test="${salary <= 0}">
+        太惨了。
+    </c:when>
+    <c:when test="${salary > 1000}">
+        不错的薪水，还能生活。
+    </c:when>
+    <c:otherwise>
+        什么都没有。
+    </c:otherwise>
+</c:choose>
+```
+
+除了以上基本使用方式，还有循环，遍历等功能，具体查看文档
+
 #### IDEA（Java）使用技巧
 
 sout 快速打出System.out.println（）
@@ -134,7 +229,7 @@ serr 快速打出System.err.println（）
 
 #### 注意事项
 
-更新类的话要重启服务器。
+更新类的话要重启服务器（可以看底部资料解决该问题： IDEA 中解决tomcat Web项目修改代码需要重新部署项目的问题）。
 
 XML是区分大小写的。
 
@@ -162,5 +257,7 @@ http://www.sikiedu.com/my/course/214 课程地址
 
 [如何使用 IntelliJ IDEA（2020.2）构建一个JavaWeb项目_LK_Lawliet的博客-CSDN博客](https://blog.csdn.net/LK_Lawliet/article/details/108797483)
 
+https://blog.csdn.net/qq_48736958/article/details/110069705 IDEA 中解决tomcat Web项目修改代码需要重新部署项目的问题
 
+[JSP 标准标签库（JSTL） | 菜鸟教程 (runoob.com)](https://www.runoob.com/jsp/jsp-jstl.html)
 
