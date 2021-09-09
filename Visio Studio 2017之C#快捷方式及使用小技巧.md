@@ -6,3 +6,15 @@ Ctrl+D复制当前行代码到下一行
 
 Ctrl+K   Ctrl+F  整理代码
 
+
+
+Idea 
+
+sout 输入文字并换行
+
+Ctrl+Shfit+Alt+L  整理代码
+
+Ctrl+Alt+O 清理无用的包
+
+Ctrl+Alt+鼠标左键 进入源码
+
