@@ -24,6 +24,12 @@ select * from user where id = '%ID%'
 SELECT * FROM user WHERE name LIKE "%"#{name}"%"
 ```
 
+查询多个ID数据(如果不存在的ID他则不会返回，只会返回存在的ID数据)
+
+```sql
+SELECT * FROM `user`  WHERE id IN (2,3,4)
+```
+
 表内一共有多少列数据
 
 ```sql

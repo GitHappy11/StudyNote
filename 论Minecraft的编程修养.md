@@ -226,11 +226,26 @@ f
 
 #### 常用命令
 
-```js
+```apl
 //重新加载数据包
 /reload 
 //查看数据包列表
 /datapack list 
+
+/scoreboard objectives add <对象名称> <主要参数>  "显示名称"
+主要参数：totalKillCount(杀怪数)、playerKillCount(杀死其他玩家次数)
+例子：
+/scoreboard objectives add plyaerkill playerKillCount "杀人榜"
+
+
+
+/scoreboard objectives setdisplay <显示位置> <对象名称>
+sidebar(右侧)、list（列表,按Tab键显示）、belowName (玩家头顶名称下方)
+例子：
+/scoreboard objectives setdisplay sidebar plyaerkill 
+
+死亡不掉落：/gamerule keepInventory true
+设置世界重生点：/setworldspawn
 ```
 
 

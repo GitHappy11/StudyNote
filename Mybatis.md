@@ -102,7 +102,7 @@ sql语句必须成立才能返回相应的参数，包括后面的模糊查询�
 
 <!--mapper所使用的命名空间【限定某些类使用】-->
 <mapper namespace="mapper.UserMapper">
-<!--    编写查询语句  查询的内容="该方法的名字"  parameterType="查询对象的数据类型"   resultType="返回值的数据类（映射类）"  -->
+<!--    编写查询语句  查询的内容="该方法的名字"  parameterType="查询对象的数据类型,一般情况下会通过你给的方法参数来自动推断，大部分情况可以不写"             resultType="返回值的数据类（映射类）"  -->
     <select id="selectUserByID"  parameterType="int"  resultType="com.bean.User">
 -- sql语句 查询 某ID 单返回
     select * from user where id = #{id}
@@ -219,6 +219,78 @@ SELECT * From user
 ```
 
 ##### trim标签 定制where标签的规则
+
+prefix用于制定哪个标签的规则  suffixOverrides 表示自动去掉前缀AND 也是防止sql语句不成立 大部分情况where标签就足够使用。
+
+```xml
+<select id="selectIfUsersTrim" parameterType="User" resultType="User">
+        SELECT * From user
+        <trim prefix="where" suffixOverrides="AND / OR">
+            <if test="isMan!=null and isMan!='' ">
+                isMan=#{isMan} AND 
+            </if>
+
+            <if test="name!=null and name!=''">
+                 name like "%"#{name}"%" AND 
+            </if>
+
+            <if test="c_id!=null and c_id!=''">
+                c_id=#{c_id} AND 
+            </if>
+        </trim>
+    </select>
+```
+
+#### set标签 
+
+解决","符号问题，防止sql语句拼接问题,set标签会自动去掉不需要的“，”符号
+
+```xml
+    <update id="updateSetUser" parameterType="User">
+<!--    更新 名字 密码 性别-->
+        Update USER
+<!--      set标签防止,导致sql拼接不正常 -->
+        <set>
+         <if test="name!=null and name!=''">
+            name = #{name},
+        </if>
+
+        <if test="isMan!=null and isMan!=''">
+            name = #{name},
+        </if>
+        </set>
+
+        where  id=#{id}
+
+
+    </update>
+```
+
+#### foeach标签
+
+自动遍历列表来进行多次查询集合
+
+```xml
+    <select id="selectUsersByID"  resultType="User">
+        SELECT * FROM USER WHERE id IN  
+<!-- collection表示传入参数的数据类型，由于java使用Integer数组类型会自动封装为array类型 所以这里的collection要为array类型。其他的数组类型雷同
+  item表示在语句中的传入参数的代替参数，open表示开头符号，close表示结尾符号，separator表示每次循环的间隔符。-->
+        <foreach collection="array" item="iid" open="(" close=")" separator=",">
+            #{iid}
+        </foreach>
+    </select>
+
+
+<select id="selectUsersByVOList"  parameterType="UserVO" resultType="User">
+        SELECT * FROM USER WHERE id IN
+     <!--使用其他类里的列表数据的时候 collection要用类里的列表数据名 -->
+        <foreach collection="idList" item="iid" open="(" close=")" separator=",">
+            #{iid}
+        </foreach>
+    </select>
+```
+
+
 
 ### 4.初始化Mybatis
 
