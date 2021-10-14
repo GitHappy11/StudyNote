@@ -252,5 +252,5 @@ sidebar(右侧)、list（列表,按Tab键显示）、belowName (玩家头顶名�
 
 #### 版本编号
 
-![image-20210117141108145](D:\WorkData\StudyNote\image\image-20210117141108145.png)
+![image-20210117141108145](https://image-1258199940.cos.ap-shanghai.myqcloud.com/D:/StudyNote/imageimage-20210117141108145.png)
 

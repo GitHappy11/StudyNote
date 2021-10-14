@@ -21,3 +21,4 @@ Visio Stdio 番茄插件
 一般我还会打开vax options->advanced下面Display的Higtlight current line:老了，眼睛不好用了，关掉underline下面的第一个
 
 10 VS现在把书签窗口又做回来了，可以无限F2,CTRL+F2,缅怀曾经的vc++6.0
+
