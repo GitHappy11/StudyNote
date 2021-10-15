@@ -8,7 +8,7 @@
 
 基本逻辑目录
 
-![image-20210118211856387](D:\WorkData\StudyNote\image\image-20210118211856387.png)
+![image-20210118211856387](https://image-1258199940.cos.ap-shanghai.myqcloud.com/D:/StudyNote/imageimage-20210118211856387.png)
 
 #### Pack.mcmeta
 
@@ -124,8 +124,7 @@ time set day
 	"ingredients":
 	[
 		{
-			"item":"minecraft:iron_ingot"
-			
+			"item":"minecraft:iron_ingot"		
 		},
 		
 		{
