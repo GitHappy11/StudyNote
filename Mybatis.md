@@ -433,3 +433,98 @@ User user=mapper.selectUserByID(3);
     </select>
 ```
 
+## MyBatis Geneartor
+
+MyBatis Generator （MBG） 是 MyBatis [MyBatis](http://mybatis.org/) 的代码生成器。它将为所有版本的MyBatis生成代码。它将自省一个数据库表（或许多表），并将生成可用于访问表的工件。这减少了设置对象和配置文件以与数据库表交互的初始麻烦。MBG 旨在对简单 CRUD（创建、检索、更新、删除）的大量数据库操作产生重大影响。您仍然需要手动编写 SQL 和对象代码，以便联接查询或存储过程。
+
+官方文档：[MyBatis Generator Core – Introduction to MyBatis Generator](https://mybatis.org/generator/index.html)
+
+**Lib目录**
+
+MyBatis核心包[Releases · mybatis/mybatis-3 (github.com)](https://github.com/mybatis/mybatis-3/releases)
+
+Generator核心包 [Releases · mybatis/generator (github.com)](https://github.com/mybatis/generator/releases)
+
+数据库驱动包
+
+### 1.首先需要一个配置文件（config.xml）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+        PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+<!--    配置数据库连接的包，这边包已经在项目之中看，所以不需要-->
+<!--    <classPathEntry location="/Program Files/IBM/SQLLIB/java/db2java.zip" />-->
+
+<!--    id：具有唯一性  targetRuntime:运行环境-->
+    <context id="test" targetRuntime="MyBatis3">
+        <!--        设置注释和时间戳，这边取消注释和时间戳，更多标签属性请看官方文档-->
+        <commentGenerator>
+            <!--            去掉注释-->
+            <property name="suppressAllComments" value="true"/>
+            <!--            去掉时间戳-->
+            <property name="suppressAllDate" value="true"/>
+        </commentGenerator>
+<!--        数据库信息-->
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver"
+                        connectionURL="jdbc:mysql://localhost:3306/test?useSSL=false"
+                        userId="root"
+                        password="">
+        </jdbcConnection>
+<!--        Java和JDBC里的数据类型转化-->
+        <javaTypeResolver >
+            <property name="forceBigDecimals" value="false" />
+        </javaTypeResolver>
+<!--JavaBean路径，输出包名，和输出路径-->
+        <javaModelGenerator targetPackage="com.bear" targetProject="src">
+<!--            是否输出子包名，在包名后面加上scheme(数据库表名)名称，这边false-->
+            <property name="enableSubPackages" value="false" />
+<!--            在Set中加上.trim  具体trim规则看Mybatis笔记-->
+            <property name="trimStrings" value="true" />
+        </javaModelGenerator>
+<!--        mappper.xml输出包名和输出路径-->
+        <sqlMapGenerator targetPackage="com.mapper"  targetProject="src">
+            <!--            是否输出子包名，在包名后面加上scheme(数据库表名)名称，这边false-->
+            <property name="enableSubPackages" value="false" />
+        </sqlMapGenerator>
+<!--java接口-需要和mapper相同的路径-->
+        <javaClientGenerator type="XMLMAPPER" targetPackage="com.mapper"  targetProject="src">
+            <!--            是否输出子包名，在包名后面加上scheme(数据库表名)名称，这边false-->
+            <property name="enableSubPackages" value="false" />
+        </javaClientGenerator>
+<!--数据表-根据数据库中的表来生成-->
+        <table tableName="user"/>
+        <table tableName="country"/>
+<!--        <table schema="DB2ADMIN" tableName="ALLTYPES" domainObjectName="Customer" >-->
+<!--            <property name="useActualColumnNames" value="true"/>-->
+<!--            <generatedKey column="ID" sqlStatement="DB2" identity="true" />-->
+<!--            <columnOverride column="DATE_FIELD" property="startDate" />-->
+<!--            <ignoreColumn column="FRED" />-->
+<!--            <columnOverride column="LONG_VARCHAR_FIELD" jdbcType="VARCHAR" />-->
+<!--        </table>-->
+    </context>
+</generatorConfiguration>
+
+```
+
+### 2.初始化确认配置文件并启动
+
+方法运行一次后即会生成文件，所以不要写在Main方法中，否则每次运行都会尝试生成，这边只是做个示范
+
+```java
+public static void main(String[] args) {
+        List<String> warnings = new ArrayList<String>();
+        boolean overwrite = true;
+        //配置文件
+        File configFile = new File("src/config.xml");
+        ConfigurationParser cp = new ConfigurationParser(warnings);
+        Configuration config = cp.parseConfiguration(configFile);
+        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
+        myBatisGenerator.generate(null);
+    }
+```
+
