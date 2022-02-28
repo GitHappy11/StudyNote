@@ -222,6 +222,14 @@ SELECT * From user
 
 prefix用于制定哪个标签的规则  suffixOverrides 表示自动去掉前缀AND 也是防止sql语句不成立 大部分情况where标签就足够使用。
 
+prefix:在trim标签内sql语句加上前缀。
+
+suffix:在trim标签内sql语句加上后缀。
+
+suffixOverrides:指定去除**多余**的后缀内容，如：suffixOverrides=","，去除trim标签内sql语句多余的后缀","。
+
+prefixOverrides:指定去除**多余**的前缀内容
+
 ```xml
 <select id="selectIfUsersTrim" parameterType="User" resultType="User">
         SELECT * From user
@@ -274,7 +282,7 @@ prefix用于制定哪个标签的规则  suffixOverrides 表示自动去掉前�
     <select id="selectUsersByID"  resultType="User">
         SELECT * FROM USER WHERE id IN  
 <!-- collection表示传入参数的数据类型，由于java使用Integer数组类型会自动封装为array类型 所以这里的collection要为array类型。其他的数组类型雷同
-  item表示在语句中的传入参数的代替参数，open表示开头符号，close表示结尾符号，separator表示每次循环的间隔符。-->
+  item表示在语句中的传入参数的代替参数，open表示开头符号，close表示结尾符号，在这边对应where in(?,?,?,?,?)，separator表示每次循环的间隔符。-->
         <foreach collection="array" item="iid" open="(" close=")" separator=",">
             #{iid}
         </foreach>
@@ -290,7 +298,21 @@ prefix用于制定哪个标签的规则  suffixOverrides 表示自动去掉前�
     </select>
 ```
 
+#### sql标签
 
+可以先预制写好一段sql语句，然后后面直接调用，就不用重复写相应的sql语句了
+
+```xml
+<!--    id是唯一的，不能重复，是调用的唯一标识-->
+<sql id="baseSelect">
+        SELECT * from  user
+    </sql> 
+
+<select id="selectUserByID"  parameterType="int"  resultType="com.bean.User">
+<!-- sql语句 查询 某ID 单返回 这边用sql标签替换了基础的Select语句-->
+    <include refid="baseSelect"/> where id = #{id}
+  </select>
+```
 
 ### 4.初始化Mybatis
 
