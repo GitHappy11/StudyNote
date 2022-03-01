@@ -126,6 +126,10 @@ if(user.getPassword().equals(password))
 }
 ```
 
+int和integer  int的默认值是0，integer的默认值是null  根据具体需求使用。
+
+
+
 三，IDEA快捷键
 
 ```java
