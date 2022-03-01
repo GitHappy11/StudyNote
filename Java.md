@@ -126,3 +126,13 @@ if(user.getPassword().equals(password))
 }
 ```
 
+三，IDEA快捷键
+
+```java
+//代码最后面.var回车或Alt+Enter自动补全返回值
+List<User> users = userMapper.selectByExample(userExample);
+```
+
+sout 快速打出System.out.println（）
+
+serr 快速打出System.err.println（）

@@ -12,6 +12,8 @@
 
 ### 1.引入Lib，需要Mybatis以及依赖库，和数据库驱动的Jar包
 
+MyBatis核心包及依赖[Releases · mybatis/mybatis-3 (github.com)](https://github.com/mybatis/mybatis-3/releases)
+
 ### 2.创建核心XML 配置文件（sqlMap），包含了对 MyBatis 系统的核心设置。
 
 配置顺序有规则【可跳过某些配置段】：详情请查看官方文档
@@ -413,7 +415,7 @@ public interface UserMapper {
 }
 ```
 
-然后会自动动态代理，就可以直接使用了 不需要实现接口
+然后会自动动态代理，就可以直接使用了 不需要实现接口   **对数据库有改动的操作（增删改） 需要commit！**
 
 ```java
 UserMapper mapper=ssf.openSession().getMapper(UserMapper.class);
@@ -512,19 +514,137 @@ Generator核心包 [Releases · mybatis/generator (github.com)](https://github.c
 
 ### 2.初始化确认配置文件并启动
 
-方法运行一次后即会生成文件，所以不要写在Main方法中，否则每次运行都会尝试生成，这边只是做个示范
+方法运行一次后即会生成文件，所以不要写在Main方法中，否则每次运行都会尝试生成，这边只是做个示范。
+
+**注意事项：数据库中必须有主键才会生成通过主键的查询方法！**
 
 ```java
 public static void main(String[] args) {
-        List<String> warnings = new ArrayList<String>();
-        boolean overwrite = true;
-        //配置文件
-        File configFile = new File("src/config.xml");
-        ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(configFile);
-        DefaultShellCallback callback = new DefaultShellCallback(overwrite);
-        MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
-        myBatisGenerator.generate(null);
-    }
+    List<String> warnings = new ArrayList<String>();
+    boolean overwrite = true;
+    //配置文件
+    File configFile = new File("src/config.xml");
+    ConfigurationParser cp = new ConfigurationParser(warnings);
+    Configuration config = cp.parseConfiguration(configFile);
+    DefaultShellCallback callback = new DefaultShellCallback(overwrite);
+    MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
+    myBatisGenerator.generate(null);
+}
+```
+
+### 3.尝试使用
+
+接下来就可以查实开始CURD了，和上面使用Mybatis一样，这边举出几个范例，由于代码是自动生成的，所以大部分方法需要自行查看文档。
+
+首先依旧得配置基础设置，**改动数据库的操作记得commit！**
+
+```java
+//配置文件路径
+String resourcePath="sqlMapConfig.xml";
+//读取配置文件
+InputStream inputStream= Resources.getResourceAsStream(resourcePath);
+//需要sqlSessionFactoryBuilder
+SqlSessionFactoryBuilder ssfb=new SqlSessionFactoryBuilder();
+//创建sqlSessionFactory
+SqlSessionFactory ssf=ssfb.build(inputStream);
+//生产sqlSession
+SqlSession ss=ssf.openSession();
+```
+
+```java
+//通过主键ID查询
+UserMapper userMapper=ss.getMapper(UserMapper.class);
+User user=userMapper.selectByPrimaryKey(2);
+System.out.println(user.toString());
+```
+
+```java
+//条件查询
+UserMapper userMapper=ss.getMapper(UserMapper.class);
+UserExample userExample=new UserExample();
+//将条件封装到createCriteria集合中 这边将性别条件封装
+userExample.createCriteria().andIsmanEqualTo((byte)2);
+//再加条件的话后面继续跟and，这边示例一个模糊查询，记得加%% 不能拆着写！这是一个对象！
+userExample.createCriteria().andIsmanEqualTo((byte)2).andNameLike("%T%");
+//按条件查询
+List<User> userList = userMapper.selectByExample(userExample);
+for (User user:userList
+    ) {
+    System.out.println(user.toString());
+}
+```
+
+```java
+//插入操作
+UserMapper userMapper=ss.getMapper(UserMapper.class);
+User user = new User();
+user.setName("哈哈哈");
+//如果有null则就不插入null值（用于数据库有默认值的情况）
+userMapper.insertSelective(user);
+//如果有null则就插null值（所见即所得）
+userMapper.insert(user);
+ss.commit();
+```
+
+
+
+## 参考资料
+
+[mybatis中各种数据的映射类型 - 异或随心 - 博客园 (cnblogs.com)](https://www.cnblogs.com/zhuangfei/p/9492915.html)
+
+```jade
+               Mybatis                                  java                                     SQL
+
+               integer                          int OR Integer                              INTEGER
+
+               long                              long OR java.lang.Long               BIGINT
+
+               short                             short OR java.lang.Short             SMALLINT
+
+               float                              float OR java.lang.Float               FLOAT
+
+               double                          double OR java.lang.Double        DOUBLE
+
+               big_decimal                  java.math.BigDecimal                  NUMERIC
+
+               character                      java.lang.String                            CHAR(1)
+
+               string                            java.lang.String                             VARCHAR
+
+               byte                              byte OR java.lang.Byte                 TINYINT
+
+               boolean                        boolean OR java.lang.Boolean     BIT
+
+               yes_no                         boolean OR java.lang.Boolean     CHAR(1) ('Y' OR 'N')
+
+               true_false                     boolean OR java.lang.Boolean     CHAR(1) ('Y' OR 'N')
+
+               date                              java.util.Date OR java.sql.Date     DATE
+
+               time                              java.util.Date OR java.sql.Time     TIME
+
+               timestamp                    java.util.Date OR java.sql.TimeStamp    TIMESTAMP
+
+               calendar                       java.util.Calendar                           TIMESTAMP   
+
+               calendar_date              java.util.Calendar                           DTAE
+
+               binary                           byte[]                                              VARBINARY OR BLOB
+
+               text                               java.lang.String                              CLOB
+
+               serializable                   java.io.Seriailzable                         VARBINARY OR BLOB
+
+               clob                              java.sql.Clob                                   CLOB
+
+               blob                              java.sql.Blob                                   BLOB
+
+               class                            java.lang.Class                               VARCHAR                                
+
+               locale                           java.util.Locale                               VARCHAR 
+
+               timezone                      java.util.TimeZone                          VARCHAR  
+
+               currency                       java.util.Currency                           VARCHAR
 ```
 
