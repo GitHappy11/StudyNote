@@ -1,4 +1,4 @@
-# Spring
+# 	Spring
 
 示例案例：SSM_Spring
 
@@ -36,8 +36,6 @@ Spring是一个容器，在XML里配置好对象后，就可以直接向Spring�
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
-<!--    配置对象-->
-    <bean name="user" class="com.bean.User"></bean>
 </beans>
 ```
 
@@ -45,29 +43,52 @@ Spring是一个容器，在XML里配置好对象后，就可以直接向Spring�
 
 ```java
 private  void Test1(){
-//根据配置文件获取容器对象,文件名记得跟着后缀！
+//根据配置文件获取容器对象,文件名记得跟着后缀！这边还会自动调用一次所有bean类的构造方法（如果不带延迟加载标签），但是如果构造方法带参，则会报错
 ApplicationContext ac=new ClassPathXmlApplicationContext("applicationContext.xml");
-//通过getBean获取配置好的User对象（向Spring要对象）
+//通过getBean获取配置好的User对象（向Spring要对象），如果对象带延迟加载标签，则构造方法会在这里再启动。
 User user = ac.getBean(User.class);
 System.out.println(user);
+//关闭容器（如果对象还是Spring管理，且标注了销毁方法，则会执行销毁方法，需要ClassPathXmlApplicationContext 创建的容器才能执行close）
+//ac.close();
 ```
 
 但是这样只能New对象，对象的变量还是需要DI依赖注入的支持。
 
 ### 3.根据配置来设置对象的值  DI
 
-依赖注入，将值通过配置的方式（XML）为变量初始化/赋值。
+三种注入方式  Set注入  构造方法注入  
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
-<!--    配置对象-->
-    <bean name="user" class="com.bean.User">
-    <!--    配置对象变量-->
-        <property name="name" value="Happy"></property>
+    <!--    配置对象-->
+    <!--    name是一个名字，我们可以通过这个name来利用容器获取对象 name可以使用特殊字符，这边还有一个类似于name的标签：ID 但是唯一且不能使用特殊字符，这边统一使用name-->
+    <!--    class是被管理对象的全包名，Spring会通过这个包名来创建对象-->
+    <!--    layz-init 懒加载，只有在对象创建的的时候再加载，初始化时不会加载并执行构造方法-->
+    <!--    scope=“singleton” 设定这个类是单例，只会有一份，后面创建等于是获取，不会再次执行构造方法,prototype则相反，多例的-->
+    <!--    init-method 里面可以填写初始化方法，每次创建都会执行-->
+    <!--    destroy-method 里面可以填写销毁方法，每次销毁都会执行,但是如果对象是多例的，这个对象创建出来后就交给你管理了，在容器被关闭的时候就不会执行销毁方法了-->
+    <bean name="user" class="com.bean.User" lazy-init="true" scope="prototype" init-method="UserInit" destroy-method="UserDestroy">
+        <!--        property 设定变量 value 设定值 必须有set方法-->
+        <property name="name" value="1111"/>
+<!--        引用类型-->
+        <property name="country" ref="country"/>
     </bean>
+
+    <bean name="country" class="com.bean.Country" >
+        <!--        property 设定变量 value 设定值 必须有set方法-->
+        <property name="name" value="China"/>
+    </bean>
+<!--    构造方法注入-->
+    <bean name="Administrator" class="com.bean.Administrator">
+<!--        可以指定Type 类型，这样定位会更加精确-->
+<!--        index 指定这个参数是在构造方法的位置 如果有多个构造方法重载可以通过顺序，类型来确定使用哪个构造方法-->
+        <constructor-arg name="name" value="admin" type="java.lang.String" index="0"/>
+        <constructor-arg name="password" value="123"/>
+    </bean>
+
 </beans>
 ```
 
