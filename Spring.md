@@ -215,3 +215,219 @@ public class TestJUnit {
 }
 ```
 
+### 6.Spring中的AOP
+
+可以在不动底层的情况下增强代码。不用一个个重写代码，增强后的类，切入点都会带着这个增强BUFF。
+
+##### JoinPoint 连接点 ：目标对象中 哪些方法会被拦截，然后增强。
+
+##### Pointcut 切入点：筛选接入点，选择想要增强的方法（从接入点中选）。
+
+##### Advice 通知/增强：增强的代码。
+
+##### Introduction 介入/引入 :在执行时期动态加入一些方法或行为。
+
+##### Aspect 切面： 通知+切入点 通知应用到哪个切入点。
+
+##### Target 目标：被代理对象。
+
+##### Weaving 织入：把切面的代码应用到目标对象来创建新的代理对象的过程。
+
+##### Proxy 代理：把切面的代码应用到目标对象来创建新的代理对象。就是创建增强后返回的对象
+
+设置一个类，它就是准备用于增强的类。 
+
+```java
+//Target 目标：被代理对象。
+public class UserServiceImpl implements UserService {
+    @Override
+    //JoinPoint 连接点 Pointcut 切入点
+    public void Save() {
+        System.out.println("Saving");
+    }
+    @Override
+    //JoinPoint 连接点 Pointcut 切入点
+    public void Delete() {
+        System.out.println("Deleting");
+    }
+    @Override
+    //JoinPoint 连接点 Pointcut 切入点
+    public void Update() {
+        System.out.println("Updating");
+    }
+    @Override
+    //JoinPoint 连接点 
+    public void Find() {
+        System.out.println("Finding");
+    }
+}
+```
+
+设置一个代理类，它就是用于返回增强后的类。**做这个的过程就是正在织入。**
+
+```java
+//UserService 代理类
+public class UserServiceProxy {
+    public UserService getUserServiceProxy(UserService userService){
+        //动态代理 Proxy 代理
+      return (UserService)Proxy.newProxyInstance(UserServiceProxy.class.getClassLoader(), UserServiceImpl.class.getInterfaces(), new InvocationHandler() {
+            @Override
+          	//Aspect 切面
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                //Advice 通知/增强 原始操作之前
+                System.out.println("准备进行数据库操作");
+                //调用原始的方法
+                Object invoke=method.invoke(userService,args);
+                //Advice 通知/增强 原始操作之后
+                System.out.println("进行数据库操作结束");
+                return invoke;
+            }
+        });
+    }
+}
+```
+
+然后就可以调用增强后的类了。
+
+```java
+public class TestAop {
+    @Test
+    public  void  Test(){
+        //创建代理对象
+        UserServiceProxy usProxy= new UserServiceProxy();
+        //创建对象
+        UserService us=new UserServiceImpl();
+        //获得增强后的代理对象
+        UserService usPowerUp = usProxy.getUserServiceProxy(us);
+        //执行增强后的类的方法
+        usPowerUp.Find();
+    }
+}
+```
+
+### 7.AOP的自定义通知
+
+可以配置相应的XML和自定义通知类。将通知方法封装起来。
+
+**需要导入下面两个jar包：aspectjweaver.jar包以及其依赖的aopalliance.jar包。**
+
+首先设置一个自定义通知类，里面包含了通知方法以及如何通知。
+
+```java
+//自定义通知类
+public class AopAdvice {
+    //Before 前置通知 在目标方法前调用
+    //在本例子中：就是用于代替System.out.println("准备进行数据库操作"); 类推后置通知
+    public  void Before(){
+        System.out.println("准备进行数据库操作---------前置通知");
+    }
+    //以下都是后置通知，在目标方法后调用
+    //After 最终通知（在目标方法执行后，无论是否出现异常，都会调用）相当于Finally
+    public void After(){
+        System.out.println("数据库操作完毕！---------后置通知--最终通知");
+    }
+    //afterReturning 成功通知（在目标方法执行后，并且执行成功）
+    private void  AfterReturning(){
+        System.out.println("数据库操作成功！---------后置通知--成功通知");
+    }
+    //AfterThrowing 异常通知（在目标方法执行后，并且执行失败）
+    private void  AfterThrowing(){
+        System.out.println("数据库操作失败！---------后置通知--失败通知");
+    }
+    //Around 环绕通知 需要我们手动调用方法，并且可以设置通知
+    public void  Around(MethodInvocationProceedingJoinPoint pjp) throws Throwable {
+        System.out.println("数据库手动排查中！---------前置通知--环绕通知");
+        Object proceed=pjp.proceed();
+        System.out.println("数据库手动排查中！---------后置通知--环绕通知");
+    }
+}
+```
+
+然后配置XML 把相应的通知类配置到需要增强的类中
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+<!--    目标对象（想要增强的对象）-->
+    <bean name="userService" class="com.service.UserServiceImpl"></bean>
+<!--        通知对象-也就是你自定义的通知类-->
+    <bean name="aopAdvice" class="com.aop.AopAdvice"></bean>
+    <aop:config>
+<!--        切面 通知+切入点 -->
+<!--        首先配置切入点-->
+<!--        id：唯一标识  expression：切入点表达式 可以配置要增强的方法（就是把连接点变成切入点）-->
+        <aop:pointcut  expression="execution( * com.service.*ServiceImpl.*(..))" id="userServicePc"/>
+<!--可以使用*进行代替,参数用..代替，代替就说明只要符合没被代替的条件都会被配置，包括包名，方法，类名中的一段都行-->
+<!--        <aop:pointcut id="userServicePcAll" expression="execution(public  *  com.service.*ServiceImpl.*(..))"/>-->
+<!--        然后配置通知 ref 你的自定义通知类-->
+        <aop:aspect ref="aopAdvice">
+<!--            配置各种通知-->
+            <aop:before method="Before" pointcut-ref="userServicePc"/>
+            <aop:after method="After" pointcut-ref="userServicePc"/>
+            <aop:after-returning method="AfterReturning" pointcut-ref="userServicePc"/>
+            <aop:after-throwing method="AfterThrowing" pointcut-ref="userServicePc"/>
+            //todo
+<!--            <aop:around method="Around" pointcut-ref="userServicePc"/>-->
+        </aop:aspect>
+    </aop:config>
+</beans>
+```
+
+### 8.Spring与JDBC
+
+这边使用了c3p0与数据库连接，**所以需要c3p0-0.9.5.2.jar包和mchange-commons-java-0.2.12**
+
+设置好Dao层和数据库信息，就可以准备尝试查询了。数据库信息最好写在配置文件里。这边只是做测试。
+
+```java
+public class UserDaoImpl implements  UserDao{
+
+    //配置c3p0 //连接数据库
+    private  static  ComboPooledDataSource dataSource;
+    static{
+        try{
+            dataSource =new ComboPooledDataSource();
+            dataSource.setDriverClass("com.mysql.cj.jdbc.Driver");
+            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8");
+            dataSource.setUser("root");
+            dataSource.setPassword("");
+        } catch (PropertyVetoException e) {
+            System.out.println("数据库连接出错！"+e);
+        }
+    }
+
+    @Override
+    public User SelectUserByID(Integer id) {
+        JdbcTemplate jt=new JdbcTemplate(dataSource);
+        String sql="select * from user where  id= ?";
+        User user = jt.queryForObject(sql, new RowMapper<User>() {
+            @Override
+            public User mapRow(ResultSet resultSet, int i) throws SQLException {
+                User user = new User();
+                user.setName(resultSet.getString("name"));
+                return user;
+            }
+        }, id);
+        return user ;
+    }
+}
+```
+
+```java
+public class TestJDBC {
+    @Test
+    public void Test(){
+        UserDao userDao=new UserDaoImpl();
+        User user=userDao.SelectUserByID(1);
+        System.out.println(user.getName());
+        }
+    }
+```
+
