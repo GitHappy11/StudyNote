@@ -666,3 +666,141 @@ ALTER TABLE <表名> ENGINE=<存储引擎名>;
 
 需要再添加两个包：mybatis-3.5.7.jar   mybatis-spring-2.0.7.jar
 
+然后创建SqlMapConfig.xml  确认下哪些类需要映射 这边没有写数据库配置，因为会在后面的Spring配置。
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <package name="com.bean"/>
+    </typeAliases>
+</configuration>
+```
+
+然后创建Mapper接口及相应的Mapper.xml
+
+```java
+public interface UserMapper {
+    //操作数据库进行扣款和加款
+    //扣款
+    void  subMoney(User user);
+    //加款
+    void  addMoney(User user);
+}
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--mapper所使用的命名空间【限定某些类使用】-->
+<mapper namespace="com.dao.mapper.UserMapper">
+<!--    使用占位符#{}，可以使用到User里的参数-->
+    <update id="subMoney" parameterType="User">
+        update user set money = money - #{transferMoney} where name =#{name};
+    </update>
+    <update id="addMoney" parameterType="User">
+        update user set money = money + #{transferMoney} where name=#{name};
+    </update>
+</mapper>
+```
+
+然后Spring配置，如果需要事务的话就配置事务
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+        http://www.springframework.org/schema/aop
+        https://www.springframework.org/schema/aop/spring-aop.xsd">
+    <context:property-placeholder location="db.properties"/>
+    <!--    DataSource-->
+    <bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+<!--    Mybatis 基础配置 数据库配置 表配置-->
+<bean name="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property name="configLocation" value="sqlMapConfig.xml"/>
+</bean>
+<!--    mapper工厂 配置基本包-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.dao.mapper"/>
+    </bean>
+<!--    配置业务实现类-->
+    <bean name="userServiceImpl" class="com.service.UserServiceImpl"></bean>
+
+    <!-- 需要事务核心管理器 -->
+    <bean name="mybatisTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 配置事务通知 -->
+    <tx:advice id="txAdvice" transaction-manager="mybatisTransactionManager">
+        <tx:attributes>
+<!--            哪些方法需要这个事务-->
+            <tx:method name="transferMoney" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
+    <!-- 配置aop -->
+    <aop:config>
+        <aop:pointcut expression="execution(* com.service.*ServiceImpl.*(..))" id="txPc"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPc"/>
+    </aop:config>
+</beans>
+```
+
+然后就可以将Spring配置进业务层实现类里，进行测试
+
+```java
+public class UserServiceImpl implements UserService {
+    //接口用类型进行配置
+    @Resource(type=UserMapper.class)
+    private UserMapper userMapper;
+    @Override
+    public void transferMoney(String subName,String addName,int money) {
+        //确定金额和对象
+        User user=new User();
+        user.setName(subName);
+        user.setTransferMoney(money);
+        //确定了user和money 进行扣款操作
+        userMapper.subMoney(user);
+//        int a=1/0; //制造报错 测试回滚
+        //被接收人
+        User user2=new User();
+        user2.setName(addName);
+        user2.setTransferMoney(money);
+        userMapper.addMoney(user2);
+    }
+```
+
+当然测试类也要相应的配置
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:applicationContext_Mybatis.xml")
+public class TestMyBatis {
+    @Resource(name = "userServiceImpl")
+    private UserService userService;
+    @Test
+    public  void Test(){
+       userService.transferMoney("哈哈哈","JDBC",10);
+    }
+}
+```
+

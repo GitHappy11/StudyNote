@@ -44,6 +44,12 @@ sout 快速打出System.out.println（）
 
 serr 快速打出System.err.println（）
 
+## 四，Java基础架构
+
+#### Dao层用于数据库操作与业务操作隔离  例如Mapper
+
+#### Service层用于业务操作	
+
 ### 好用的插件整理
 
 ## **Free Mybatis plugin**      
