@@ -394,18 +394,36 @@ public class UserDaoImpl implements  UserDao{
     static{
         try{
             dataSource =new ComboPooledDataSource();
-            dataSource.setDriverClass("com.mysql.cj.jdbc.Driver");
-            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8");
+            dataSource.setDriverClass("com.mysql.jdbc.Driver");
+            dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/test");
             dataSource.setUser("root");
             dataSource.setPassword("");
         } catch (PropertyVetoException e) {
             System.out.println("数据库连接出错！"+e);
         }
     }
+    JdbcTemplate jt=new JdbcTemplate(dataSource);
+
+    @Override
+    public void SaveUser(User user) {
+        String sql="insert into user values (null,?,null ,null ,null ,null )";
+        jt.update(sql,user.getName());
+    }
+
+    @Override
+    public void DeleteByID(Integer id) {
+        String sql="delete from user where id =?";
+        jt.update(sql,id);
+    }
+
+    @Override
+    public void UpdateByUser(User u,Integer id) {
+        String sql="update user set name=? where id= ?";
+        jt.update(sql,u.getName(),id);
+    }
 
     @Override
     public User SelectUserByID(Integer id) {
-        JdbcTemplate jt=new JdbcTemplate(dataSource);
         String sql="select * from user where  id= ?";
         User user = jt.queryForObject(sql, new RowMapper<User>() {
             @Override
@@ -417,10 +435,32 @@ public class UserDaoImpl implements  UserDao{
         }, id);
         return user ;
     }
+
+    @Override
+    public List<User> SelectAllUser() {
+        String sql="select * from user";
+        List<User> userList = jt.query(sql, new RowMapper<User>() {
+            public User mapRow(ResultSet resultSet, int i) throws SQLException {
+                User user = new User();
+                user.setName(resultSet.getString("name"));
+                return user;
+            }
+        });
+        return userList ;
+    }
+
+    @Override
+    public Integer SelectAllUserToNum() {
+        String sql="select count(*) from user";
+        Integer count = jt.queryForObject(sql, Integer.class);
+        return count;
+    }
 }
+
 ```
 
 ```java
+//老套的测试，这边就不多写了
 public class TestJDBC {
     @Test
     public void Test(){
@@ -430,4 +470,199 @@ public class TestJDBC {
         }
     }
 ```
+
+上面是一般使用情况，这边开始使用Spring开始管理
+
+#### 首先创建XML文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<!--依赖关系 DAO->jdbcTemplate->dataSource-->
+
+<!--    DataSource-->
+    <bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test"/>
+        <property name="user" value="root"/>
+        <property name="password" value=""/>
+    </bean>
+<!--    jdbcTemplate-->
+    <bean name="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+<!--    dao-->
+    <bean name="userDao" class="com.dao.UserDaoImpl">
+        <property name="jt" ref="jdbcTemplate"/>
+    </bean>
+<!--    这边可以直接撇开jdbcTemplate 直接注入 详情查看siki spring 29课时-->
+    <!--依赖关系 DAO->dataSource-->
+<!--    <bean name="userDao" class="com.dao.UserDaoImpl">-->
+<!--        <property name="dataSource" ref="dataSource"/>-->
+<!--    </bean>-->
+    
+</beans>
+```
+
+然后就可以使用Spring注入跑测试了
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("classpath:applicationContext_JDBC.xml")
+public class TestJDBC {
+    @Resource(name = "userDao")
+    private UserDao userDao;
+    @Test
+    public void Test(){
+        System.out.println(userDao.SelectUserByID(8).getName());
+        }
+    }
+```
+
+当然也可以外部引入JDBC的配置文件
+
+##### db.properties
+
+```properties
+jdbc.driverClass =com.mysql.jdbc.Driver
+jdbc.jdbcUrl =jdbc:mysql://localhost:3306/test
+jdbc.user =root
+jdbc.password =
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+<!--依赖关系 DAO->jdbcTemplate->dataSource-->
+<context:property-placeholder location="db.properties"/>
+<!--    DataSource-->
+    <bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+```
+
+### 9.SpringAOP事务
+
+使得JDBC语句有同生共死的功能，例如转账模式，在程序中，转账一人扣钱，一人加钱，但是如果扣钱失败，加钱也应该跟着失败，而不是扣钱失败，加钱成功
+
+**注意事项：数据库引擎必须是innodb才能使用事务操作！MySQL默认使用的引擎是MyISAM**
+
+MySQL 中修改数据表的存储引擎的语法格式如下：
+
+```mysql
+ALTER TABLE <表名> ENGINE=<存储引擎名>;
+```
+
+原子性（Atomicity）：一个事务中的多个操作要么都成功要么都失败。
+一致性（Consistency）：(例如存钱操作,存之前和存之后的总钱数应该是一致的。
+隔离性（Isolation）：事务与事务应该是相互隔离的。
+持久性（Durability）：事务一旦提交,数据要持久保存。
+
+配置XML
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+<!--依赖关系 DAO->jdbcTemplate->dataSource-->
+<context:property-placeholder location="db.properties"/>
+<!--    DataSource-->
+    <bean name="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+<!--    jdbcTemplate-->
+    <bean name="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+<!--    dao-->
+    <bean name="userDao" class="com.dao.UserDaoImpl">
+        <property name="jt" ref="jdbcTemplate"/>
+    </bean>
+<!--    这边可以直接撇开jdbcTemplate 直接注入 详情查看siki spring 29课时-->
+    <!--依赖关系 DAO->dataSource-->
+<!--    <bean name="userDao" class="com.dao.UserDaoImpl">-->
+<!--        <property name="dataSource" ref="dataSource"/>-->
+<!--    </bean>-->
+
+<!--    AOP事务配置-->
+<!-- 配置事务核心管理器 不同平台不一样-->
+    <bean name="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+<!--    事务通知 开启配置-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+<!--        配置方法-->
+        <tx:attributes>
+<!--            方法名-隔离级别-传播行为-是否对数据库进行修改(只读模式)-有修改就是false-->
+            <tx:method name="SaveAndSelect" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+<!--             也可以使用通配符*-->
+            <tx:method name="Select*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
+<!--    AOP配置-->
+    <aop:config>
+        <aop:pointcut  expression="execution( * com.dao.*Impl.*(..))" id="txPc"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPc"/>
+    </aop:config>
+</beans>
+```
+
+配置方法 如果第二个对数据库的操作出现了问题，则第一个操作就会回滚
+
+```java
+    public void SaveAndDelete() {
+        User user=new User();
+        user.setName("AOP事务");
+        SaveUser(user);
+        //制造报错
+        int a=1/0;
+        DeleteByID(5);
+    }
+```
+
+注解法  只要开启即可
+
+```xml
+<!--    事务通知 开启注解事务-->
+    <tx:annotation-driven/>
+```
+
+```java
+    @Transactional(isolation = Isolation.DEFAULT,propagation = Propagation.REQUIRED,readOnly = false)
+    public void SaveAndDelete() {
+        User user=new User();
+        user.setName("AOP事务");
+        SaveUser(user);
+        //制造报错
+        int a=1/0;
+        DeleteByID(5);
+    }
+```
+
+### 10.Spring与Mybatis
+
+需要再添加两个包：mybatis-3.5.7.jar   mybatis-spring-2.0.7.jar
 
