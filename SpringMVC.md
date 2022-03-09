@@ -104,3 +104,13 @@ public class ItemController {
 ```
 
 以上步骤完成后，就可以打开服务器测试了，在主域名后面添加上/list.form 即可访问该页面
+
+**小坑注意**  写后端请先看看前端！两者的变量名需要需要统一规定！
+
+
+
+
+
+参考资料
+
+![Spring_mvc完整处理流程图_普通版](https://image-1258199940.cos.ap-shanghai.myqcloud.com/D:/StudyNote/imageSpring_mvc完整处理流程图_普通版.png)
