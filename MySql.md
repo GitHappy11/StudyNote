@@ -36,6 +36,12 @@ SELECT * FROM `user`  WHERE id IN (2,3,4)
 select COUNT(*) from user
 ```
 
+查询出来的语句按顺序排序
+
+```sql
+select * from user ORDER BY c_id
+```
+
 #### 多表查询
 
 查询表内信息以及相关表的关联信息 【表后是代替符（用u代替user）】

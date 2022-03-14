@@ -220,6 +220,34 @@ SELECT * From user
         </where>
 ```
 
+##### Choose标签  类似于编程语言中的Switch
+
+当 when 中有条件满足的时候，就会跳出 choose，即所有的 when 和 otherwise 条件中，只有一个会输出，条件都不满足的时候就输出 otherwise 中的内容
+
+能有多个when  顺序从上至下
+
+```xml
+	<select id="selectItemInfoByVo" parameterType="ItemInfoVo" resultType="ItemInfo">
+		SELECT * 
+		FROM item_info
+		<where>
+			<if test="item_name != null and item_name != ''">
+				and item_name LIKE "%"#{item_name}"%"
+			</if>
+		</where>
+		<choose>
+			<when test="sort_rule != null and sort_rule != '' and sort_name != null and sort_name != ''">
+				ORDER BY ${sort_name} ${sort_rule}, item_release_date DESC
+			</when>
+			<otherwise>
+				ORDER BY item_release_date DESC
+			</otherwise>
+		</choose>
+	</select>
+```
+
+
+
 ##### trim标签 定制where标签的规则
 
 prefix用于制定哪个标签的规则  suffixOverrides 表示自动去掉前缀AND 也是防止sql语句不成立 大部分情况where标签就足够使用。
