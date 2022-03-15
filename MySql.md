@@ -66,10 +66,16 @@ SELECT * FROM `user` u WHERE u.isMan=1 AND u.`name` LIKE '%1%' AND u.c_id=1
 
 ### 插入语句
 
-完整插入
+完整插入 **如果id为自增主键，可以设置成NUll或者0，MySQL会自动处理**
 
 ```sql
 insert into user value (#{id},#{name},#{isMan},#{age},#{time})
+```
+
+不完整插入 只插入想要的值，其他的值为表中设置的默认值
+
+```mysql
+insert into user (name,isMan) value (#{name},#{isman})
 ```
 
 ### 更新语句

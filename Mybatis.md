@@ -438,6 +438,7 @@ import com.bean.User;
 public interface UserMapper {
     //查询
     //记住要按照XML文件配置包名，类名，方法名，参数类型，返回值类型
+    //无法进行重载！
     public User selectUserByID(int id);
 
 }
