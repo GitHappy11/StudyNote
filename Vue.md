@@ -1,4 +1,4 @@
-# Vue
+#  Vue
 
 **官方文档**：[Vue.js (vuejs.org)](https://cn.vuejs.org/)
 
@@ -65,39 +65,172 @@ Edge：直接去扩展商店里面搜：Vue.js devtools 即可 安装完毕后�
 </html>
 ```
 
-简单姓名案例实现
+### 3.模块实现 
+
+#### 1.普通数据模块 **data**
+
+```javascript
+//数据属性模块
+data:{
+    firstName:"张",
+    lastName:"三"
+},
+```
+
+#### 2.函数模块 **method**
+
+```javascript
+//在其他模块中，需要调用Vue内其他模块的变量的话，需要+this
+//函数属性模块
+methods:{
+    getLastName(){
+        //此处的this是vm
+        return this.lastName.slice(0,3)
+    }
+```
+
+#### 3.计算属性模块 **computed**
+
+```javascript
+//计算属性模块
+computed:{
+    fullName:{
+        get(){
+            //此处的this是vm
+            //get什么时候调用？初次调用时，改变时，所以会带缓存，不像函数属性模块，每次都要调用
+            return this.firstName+"-"+this.lastName
+        },
+            //set什么时候调用，修改的fullName的时候调用
+            //默认值 可省略 
+            set(value){
+                //请注意：修改的是fullName 并不是frisName和lastName
+                //但是fullName的Get是这两个变量组成的，所以必须修改这两个变量才会使得Get时让fullNameReturn出去的值发生改变
+                const arr=value.split('-')
+                //最终修改的还是get内方法所依赖的两个变量
+                this.firstName=arr[0]
+                this.lastName=arr[1]
+            }
+    }
+    //简写 只读不写情况下（只有get） 配置成函数的形式 但是在上面调用的时候，还是按数据的方式调用（不带()）
+    // fullName(){
+    //     return this.firstName+"-"+this.lastName
+    // }
+}
+```
+
+#### 4.监视模块  **watch**
+
+```javascript
+//监视模块 可以监视任何模块内的值
+watch:{
+    isSuccess:{
+        immediate:true,//初始化时调用一次handler
+            //在属性方式改变的时候调用
+            //参数 改变后的新值，改变前的旧值
+            handler(newValue,oldValue){
+            console.log("isSuccess被修改了",newValue,oldValue)
+        }
+    },
+        //检测数据模块里数据类里的变量
+        'numbers.a':{
+            handler(newValue,oldValue){
+                console.log("a被修改了",newValue,oldValue)
+            }
+        },
+            //深度检测数据类里的变量是否改变（所有变量都会被检测）
+            numbers:{
+                //开启深度检测，如果不开启，只会在numbers增删新的变量才回被监测
+                //开启后，只要这个numbers里的变量发生变化，就都会被检测到了
+                deep:true,
+                    handler(){
+                    console.log("numbers被修改了",newValue,oldValue)
+                }
+            }
+    //简写 不带其他设置 只有handler
+    // numbers(newValue,oldValue){
+    //     console.log("numbers被修改了",newValue,oldValue)
+    // }
+}            
+})
+// vmm对象外监视
+// vmm.$watch('isSuccess',{
+//     immediate:true,//初始化时调用一次handler
+//     //在属性方式改变的时候调用
+//     //参数 改变后的新值，改变前的旧值
+//     handler(newValue,oldValue){
+//     console.log("isSuccess被修改了",newValue,oldValue)
+//     }
+// })
+//简写
+// vmm.$watch('isSuccess',function(newValue,oldValue){
+//     console.log("isSuccess被修改了",newValue,oldValue)
+// })
+```
+
+#### 案例
 
 ```html
-<!--  插值语法和指令语法实现 -->
+<!--  各种模块实现方式 -->
 <div id="mustacheImpl">
-    插值语法和指令语法实现<br/>
+    各种模块实现方式<br/>
     <!-- 双向绑定 -->
     姓<input type="text" v-model="firstName"><br/>
     名<input type="text" v-model="lastName"><br/>
     <!-- 添加函数获取想要的结果 尽量不要在模板里面添加太多的表达式，最好全部都在JavaScript里处理完后再传过来  -->
+    <!-- 函数模块 -->
     姓名:<span>{{firstName.slice(0,3)}}-{{getLastName()}}</span>
+    <!-- 计算属性模块 -->
+    计算属性姓名:<span>{{fullName}}</span><br/>
+    <!-- 监视模块 -->
+    <button @click="changeInfo">监视模块：{{isSuccessNow}}</button>
 </div>
 ```
 
 ```javascript
-//指令语法实现
 new Vue({
     el:"#mustacheImpl",
+    //数据属性模块
     data:{
         firstName:"张",
         lastName:"三"
     },
+    //在其他模块中，需要调用Vue内其他模块的变量的话，需要+this
+    //函数属性模块
     methods:{
         getLastName(){
+            //此处的this是vm
             return this.lastName.slice(0,3)
         }
+    },
+    //计算属性模块
+    computed:{
+        fullName:{
+            get(){
+                //此处的this是vm
+                //get什么时候调用？初次调用时，改变时，所以会带缓存，不像函数属性模块，每次都要调用
+                return this.firstName+"-"+this.lastName
+            },
+            //set什么时候调用，修改的fullName的时候调用
+            //默认值 可省略 
+            set(value){
+                //请注意：修改的是fullName 并不是frisName和lastName
+                //但是fullName的Get是这两个变量组成的，所以必须修改这两个变量才会使得Get时让fullNameReturn出去的值发生改变
+                const arr=value.split('-')
+                //最终修改的还是get内方法所依赖的两个变量
+                this.firstName=arr[0]
+                this.lastName=arr[1]
+            }
+        }
+        //简写 只读不写情况下（只有get） 配置成函数的形式 但是在上面调用的时候，还是按数据的方式调用（不带()）
+        // fullName(){
+        //     return this.firstName+"-"+this.lastName
+        // }
     }
-})
 ```
 
 
 
-### 3.单双相绑定
+### 4.单双相绑定
 
 容器部分
 
@@ -119,7 +252,7 @@ new Vue({
 })
 ```
 
-### 4. Object.defineProperty
+### 5. Object.defineProperty
 
 https://www.bilibili.com/video/BV1Zy4y1K7SH P11
 
@@ -159,7 +292,7 @@ Object.defineProperty(person,'age',{
 
 如何看一个变量是固定的常量还是被其他数据所代理了？网页内查看控制台 看它的值是已经显示出来了 还是...  需要点击显示
 
-### 5.事件处理
+### 6.事件处理
 
 #### 事件修饰符
 
