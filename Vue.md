@@ -93,6 +93,7 @@ methods:{
 
 ```javascript
 //计算属性模块
+//最终效果就是返回值，无法使用异步（定时器），会吃掉它的返回值
 computed:{
     fullName:{
         get(){
@@ -110,48 +111,66 @@ computed:{
                 this.firstName=arr[0]
                 this.lastName=arr[1]
             }
-    }
-    //简写 只读不写情况下（只有get） 配置成函数的形式 但是在上面调用的时候，还是按数据的方式调用（不带()）
-    // fullName(){
-    //     return this.firstName+"-"+this.lastName
-    // }
-}
+    },
+        /*简写 只读不写情况下（只有get） 配置成函数的形式 但是在上面调用的时候，还是按数据的方式调用（不带()）
+                 fullName(){
+                     return this.firstName+"-"+this.lastName
+                */
+        isSuccessNow(){
+            return this.isSuccess
+        }
+},
 ```
 
 #### 4.监视模块  **watch**
 
+**Computed和Watch之间的区别:**
+
+1.computed能完成的功能, watch都可以完成。
+
+2.watch能完成的功能, computed不一定能完成,例如:watch可以进行异步操作(定时器)。
+
+**两个重要的小原则:**
+
+1.所被Vue管理的函数,最好写成普通函数,这样this的指向才是vm或组件实例对象。
+
+2.所有不被Vue所管理的函数(定时器的回调函数、ajax的回调函数等),最好写成箭头函数这样this的指向才是vm或组件实例对象。
+
 ```javascript
-//监视模块 可以监视任何模块内的值
+//监视模块 可以监视任何模块内的值 可使用异步（定时器） 因为它改的是变量
 watch:{
     isSuccess:{
         immediate:true,//初始化时调用一次handler
             //在属性方式改变的时候调用
             //参数 改变后的新值，改变前的旧值
             handler(newValue,oldValue){
-            console.log("isSuccess被修改了",newValue,oldValue)
-        }
-    },
-        //检测数据模块里数据类里的变量
-        'numbers.a':{
-            handler(newValue,oldValue){
-                console.log("a被修改了",newValue,oldValue)
-            }
+            //定时器  延迟1000毫秒启动（1秒）
+            setTimeout(()=>{
+                console.log("isSuccess被修改了",newValue,oldValue)
+            },1000)
         },
-            //深度检测数据类里的变量是否改变（所有变量都会被检测）
-            numbers:{
-                //开启深度检测，如果不开启，只会在numbers增删新的变量才回被监测
-                //开启后，只要这个numbers里的变量发生变化，就都会被检测到了
-                deep:true,
-                    handler(){
-                    console.log("numbers被修改了",newValue,oldValue)
+            //检测数据模块里数据类里的变量
+            'numbers.a':{
+                handler(newValue,oldValue){
+                    console.log("a被修改了",newValue,oldValue)
                 }
-            }
-    //简写 不带其他设置 只有handler
-    // numbers(newValue,oldValue){
-    //     console.log("numbers被修改了",newValue,oldValue)
-    // }
-}            
-})
+            },
+                //深度检测数据类里的变量是否改变（所有变量都会被检测）
+                numbers:{
+                    //开启深度检测，如果不开启，只会在numbers增删新的变量才回被监测
+                    //开启后，只要这个numbers里的变量发生变化，就都会被检测到了
+                    deep:true,
+                        handler(){
+                        console.log("numbers被修改了",newValue,oldValue)
+                    }
+                }
+        //简写 不带其他设置 只有handler
+        // numbers(newValue,oldValue){
+        //     console.log("numbers被修改了",newValue,oldValue)
+        // }
+
+    }     
+}
 // vmm对象外监视
 // vmm.$watch('isSuccess',{
 //     immediate:true,//初始化时调用一次handler
@@ -351,4 +370,6 @@ new Vue({
         }
     },        
 ```
+
+### 7.样式绑定
 
