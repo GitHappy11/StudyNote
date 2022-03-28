@@ -371,5 +371,121 @@ new Vue({
     },        
 ```
 
-### 7.样式绑定
+### 7.样式绑定  
+
+不同的情况使用不同的样式绑定，ID（唯一的）一般是用于绑方法，Class（可重复的）用于绑样式
+
+```html
+<!-- 这里使用class（.） 先定义好样式再套div 一般用于多套相同的div 用id的说明它是唯一的 -->
+<!-- 正常使用方式 id绑定方法 class绑定样式 因为方法一般都是唯一的，只为它一个div服务，而样式可能会服务多个div -->
+<div id="cssStyleFunction" >
+    <!-- :class 绑定方式 会去data里面找相应的class 适用于样式的类名不确定。需要动态指定-->
+    <div class="cssStyle" :class="a">{{name}}</div>
+    <!-- 绑定数组，这样就把数组里的所有值都绑定进去了，多样式绑定,适用于要绑定的样式个数不确定，名字也不确定-->
+    <div class="cssStyle" :class="classArr">{{name}}</div>
+    <!-- 绑定对象，这样就把对象里的所有值都绑定进去了，再用在对象中设置boolean值进行开关，适用于要绑定的样式个数确定，名字确定，但是要看情况是否开关-->
+    <div :class="classObj">{{name}}</div>
+    <!-- Style绑定 -->
+    <div class="cssStyle" :style="{fontSize:fSize+'px'}">{{name}}</div>
+    <!-- 当然最好还使用对象绑定，设置好相应的Style然后绑定进去  也可以使用数组，这里不再赘述-->
+    <div class="cssStyle" :style="StyleObj">{{name}}</div>
+</div>
+```
+
+```javascript
+//样式绑定
+new Vue({
+    el:'#cssStyleFunction',
+    data:{
+        name:"样式绑定",
+        a:"cssStyleBackground",
+        //数组，绑定多个样式
+        classArr:['cssStyleBackground'],
+        classObj:{
+            //通过boolean值进行开关样式，可多个
+            cssStyle:true,
+            cssStyleBackground:false
+        },
+        //设置变量，用于Style字体大小设定
+        fSize:40,
+        //使用对象绑定样式
+        StyleObj:{
+            fontSize:'40px',
+            color:'red'
+        }
+    }
+})
+```
+
+### 8.条件渲染 Template
+
+​	页面刚加载完毕时，template的内容是不会被渲染的（就算里面有内容），只有在后面你进行语法操作（这里是将n取反）后，它才会进行一次反应，不然你开始就为true它也不会渲染，因为你并没有对它进行一次操作。
+
+```html
+<!-- 条件渲染 -->
+<div id="templateRoot">
+    <h2 v-show="true">条件渲染</h2>
+    <button @click="n=!n">点我渲染template</button>
+    <!-- template 模板标签 可以在不影响结构的情况下将内容包裹起来一起设定（没有id的div）如果用div的话可能会导致外层div无法拿到内层div -->
+    <!-- template只能v-if  在页面中不会显示这个结构 只用于操作包含在里面的DOM -->
+    <!-- 重点！页面刚加载完毕时，template的内容是不会被渲染的（就算里面有内容），只有在后面你进行语法操作（这里是将n取反）后，它才会进行一次反应，不然你开始就为true它也不会渲染，因为你并没有对它进行一次操作 -->
+    <template v-if="n">
+        <!-- 隐藏单元 还存在于控制台（F12）中 -->
+        <h2 v-show="true">条件渲染</h2>
+        <!-- 删除单元 不存在于控制台中 -->
+        <h2 v-if="true">条件渲染</h2>
+        <h2>条件渲染</h2>
+        <!-- 可以在DOM中写原生语言 不允许被打断 不建议使用！还是在Script操作完再在DOM中操作 -->
+        <!-- <h2 v-else-if="true">条件渲染</h2> -->
+    </template>
+</div>
+```
+
+```javascript
+//条件渲染
+new Vue({
+    el:'#templateRoot',
+    data:{
+        n:false
+    }
+})
+```
+
+### 9.列表渲染 Key
+
+![image-20220328174934228](https://image-1258199940.cos.ap-shanghai.myqcloud.com/D:/StudyNote/imageimage-20220328174934228.png)
+
+```html
+<!-- 列表渲染 -->
+    <div id="listRoot">
+        <!-- 数组渲染 -->
+        <ul>
+            <!-- 使用key绑定数据，防止后面添加数据时候数组的索引错乱导致数据错乱，还会导致效率问题，添加删除的时候会再次操作虚拟DOM，如果没有key，就无法复用，要重新加载一遍，这边绑定了ID  视频p30-->
+            <li v-for="p in persons" :key="p.id">姓名：{{p.name}}-年龄:{{p.age}}</li>
+        </ul>
+        <!-- 对象渲染 -->
+        <ul>
+            <li v-for="(value,key) of language">{{key}}-{{value}}</li>
+        </ul>
+    </div>
+```
+
+```javascript
+//列表渲染
+new Vue({
+    el:'#listRoot',
+    data:{
+        persons:[
+            {id:'001',name:'张一',age:18},
+            {id:'002',name:'陈二',age:19},
+            {id:'003',name:'李三',age:20}
+        ],
+        language:{
+            name:'Java',
+            difficulty:'normal',
+            money:'8000'
+        }
+    }
+})
+```
 
