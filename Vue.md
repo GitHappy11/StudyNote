@@ -489,3 +489,72 @@ new Vue({
 })
 ```
 
+### 10.表单收集
+
+![image-20220330154815490](https://image-1258199940.cos.ap-shanghai.myqcloud.com/D:/StudyNote/imageimage-20220330154815490.png)
+
+```html
+<!-- 表单收集 -->
+<div id="formCollection">
+    <!--submit 提交事件 绑定方法sub prevent阻止默认事件（跳转页面）-->
+    <form @submit.prevent="sub">
+        <!--自动省略前后的空格（字符串中间的空格不会省略）-->
+        账号：<input type="text" v-model.trim="account"> <br/><br/>
+        密码：<input type="password" v-model="password"> <br/><br/>
+        <!-- typeNumber控制前端数据类型 v-m.number控制后端数据类型，默认都是字符串，需转化再传入后端 -->
+        年龄：<input type="number" v-model.number="age"> <br/><br/>
+        性别：
+        <!-- 设置name确认为单选组 -->
+        <!-- 设置value值告诉后端数据-->
+        男<input type="radio" name="sex" value="男" v-model="sex">
+        女<input type="radio" name="sex" value="女" v-model="sex">
+        爱好：
+        学习<input type="checkbox" value="学习" v-model="hobby">
+        打游戏<input type="checkbox" value="打游戏" v-model="hobby">
+        吃饭<input type="checkbox" value="吃饭" v-model="hobby">
+        <br/><br/>
+        所属校区
+        <select v-model="city">
+            <option value="">请选择校区</option>
+            <option value="beijing">北京</option>
+            <option value="shanghai">上海</option>
+            <option value="fujian">福建</option>
+        </select>
+        其他信息
+        <!-- lazy  只有失去焦点的时候才收集数据 提升性能 -->
+        <textarea v-model.lazy="userInfo.other"></textarea>
+        <input type="checkbox" v-model="agree">阅读并接受<a href="http://happyeleven.net">用户协议</a>
+        <button>提交</button>
+    </form>
+</div>
+```
+
+```javascript
+//表单收集
+new Vue({
+    el:'#formCollection',
+    data:{
+        name:'表单收集',
+        account:'请输入你的账号',
+        password:'',
+        age:'',
+        sex:'女',//可以设置默认值，在html中会自动匹配相应选项并勾选
+        hobby:[], //多选请设置成数组!
+        city:'beijing',
+        agree:'true',
+        //最好还是套一层类别，不要直接访问data 这里就不做
+        userInfo:{
+            other:'随便写点什么',
+        }
+    },
+    methods:{
+        sub(){
+            alert("提交！"),
+                //json格式输出 也可以直接输出data
+                console.log(JSON.stringify(this._data))
+            console.log(JSON.stringify(this.userInfo))
+        }
+    }
+})
+```
+

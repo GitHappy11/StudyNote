@@ -245,6 +245,7 @@ sidebar(右侧)、list（列表,按Tab键显示）、belowName (玩家头顶名�
 
 死亡不掉落：/gamerule keepInventory true
 设置世界重生点：/setworldspawn
+清理掉落物：/kill @e[type=item]
 ```
 
 
